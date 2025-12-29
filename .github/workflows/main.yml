@@ -53,15 +53,14 @@ jobs:
     # ==============================
     # Start Tailscale
     # ==============================
-    - name: Start Tailscale
-      shell: bash
-      env:
-        TS_AUTHKEY: ${{ secrets.TS_AUTHKEY }}
-      run: |
-        sudo tailscale up \
-          --authkey=${TS_AUTHKEY} \
-          --hostname=gh-macos-14 \
-          --accept-routes
+    name: Start Tailscale
+    env:
+        TS_KEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+        run: |
+         brew install tailscale
+         sudo tailscaled > tailscaled.log 2>&1 &
+         sleep 15
+         sudo tailscale up --authkey="$TS_KEY" --hostname="macos-win11-runner"
 
     # ==============================
     # Prepare VM Files
