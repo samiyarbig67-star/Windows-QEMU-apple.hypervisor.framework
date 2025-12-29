@@ -1,11 +1,11 @@
 name: macOS QEMU HVF Windows 11 ISO
 
 on:
-  workflow_dispatch:
+workflow_dispatch:
 
 jobs:
-  vm:
-    runs-on: macos-14
+vm:
+runs-on: macos-14
     
 
     steps:
