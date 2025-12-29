@@ -1,4 +1,4 @@
-name: macOS QEMU HVF Windows 11 ISO
+name: macOS QEMU HVF + Windows 11 + NoMachine + Tailscale
 
 on:
   workflow_dispatch:
@@ -10,13 +10,12 @@ jobs:
     timeout-minutes: 360
 
     steps:
+    # ==============================
     - name: Checkout
       uses: actions/checkout@v4
 
     # ==============================
-    # Install Homebrew
-    # ==============================
-    - name: Install Homebrew
+    - name: Setup Homebrew
       shell: bash
       run: |
         if ! command -v brew >/dev/null 2>&1; then
@@ -24,9 +23,8 @@ jobs:
         fi
         echo "$(/opt/homebrew/bin/brew shellenv)" >> $GITHUB_ENV
         echo "$(/usr/local/bin/brew shellenv)" >> $GITHUB_ENV
+        eval "$(/opt/homebrew/bin/brew shellenv)"
 
-    # ==============================
-    # Install QEMU (HVF)
     # ==============================
     - name: Install QEMU
       shell: bash
@@ -35,64 +33,45 @@ jobs:
         brew install qemu
 
     # ==============================
-    # Install NoMachine
-    # ==============================
     - name: Install NoMachine
       shell: bash
       run: |
-        brew install --cask nomachine
+        brew install --cask nomachine --no-quarantine
 
-    # ==============================
-    # Install Tailscale
-    # ==============================
-    - name: Install Tailscale
-      shell: bash
-      run: |
-        brew install --cask tailscale
-
-    # ==============================
-    # Start Tailscale
     # ==============================
     - name: Setup Tailscale (Safe Mode)
-    env:
-    TS_KEY: ${{ secrets.TAILSCALE_AUTHKEY }}
-    shell: bash
-    run: |
-     # بروزرسانی و safe install
-     brew update
-     brew install --cask --no-quarantine tailscale
+      env:
+        TS_KEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+      shell: bash
+      run: |
+        brew install --cask --no-quarantine tailscale
 
-     # مطمئن شدن که binary قابل دسترسی است
-     sudo ln -sf /Applications/Tailscale.app/Contents/MacOS/Tailscale /usr/local/bin/tailscale
+        # لینک مستقیم binary اگر brew link fail شد
+        sudo ln -sf /Applications/Tailscale.app/Contents/MacOS/Tailscale /usr/local/bin/tailscale
 
-     # صبر 5 ثانیه برای اطمینان
-     sleep 5
+        # صبر کوتاه برای daemon
+        sleep 5
 
-     # اجرا با authkey
-     sudo tailscale up --authkey="$TS_KEY" --hostname="macos-win11-runner" || true
+        # Tailscale up با authkey
+        sudo tailscale up --authkey="$TS_KEY" --hostname="macos-win11-runner" --accept-routes || true
+
     # ==============================
-    # Prepare VM Files
+    - name: Get Tailscale IP
+      shell: bash
+      run: |
+        TS_IP=$(tailscale ip -4)
+        echo "Tailscale IP: $TS_IP"
+
     # ==============================
     - name: Prepare VM
       shell: bash
       run: |
         mkdir -p $HOME/vm
         qemu-img create -f qcow2 $HOME/vm/win11.qcow2 80G
+        curl -L -o $HOME/vm/Win11.iso https://archive.org/download/win-11-english-x-64_202111/Win11_English_x64.iso
 
     # ==============================
-    # Download Windows 11 ISO
-    # ==============================
-    - name: Download Windows 11 ISO
-      shell: bash
-      run: |
-        curl -L \
-        -o $HOME/vm/Win11.iso \
-        https://archive.org/download/win-11-english-x-64_202111/Win11_English_x64.iso
-
-    # ==============================
-    # Run QEMU (Boot from ISO)
-    # ==============================
-    - name: Run Windows 11 Installer (HVF)
+    - name: Run Windows 11 VM
       shell: bash
       run: |
         qemu-system-x86_64 \
@@ -108,8 +87,6 @@ jobs:
           -display none \
           -daemonize
 
-    # ==============================
-    # Keep Alive
     # ==============================
     - name: Keep Runner Alive
       shell: bash
