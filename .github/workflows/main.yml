@@ -1,6 +1,6 @@
 name: macOS QEMU HVF Windows 11 ISO
 
-      on:
+on:
       workflow_dispatch:
 
       jobs:
