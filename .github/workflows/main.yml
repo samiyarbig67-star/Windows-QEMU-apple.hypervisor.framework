@@ -5,7 +5,7 @@ on:
 
 jobs:
   vm:
-    runs-on: macos-13
+    runs-on: macos-ventura
 
     timeout-minutes: 360
 
