@@ -6,8 +6,7 @@ on:
 jobs:
   vm:
     runs-on: macos-14
-
-    timeout-minutes: 360
+    
 
     steps:
     - name: Checkout
@@ -92,7 +91,7 @@ jobs:
           -cpu host \
           -smp 4 \
           -m 4096 \
-          -drive file=$HOME/vm/win11.qcow2,format=qcow2 \
+          -drive file=$HOME/vm/win11.qcow,format=qcow2 \
           -cdrom $HOME/vm/Win11.iso \
           -boot d \
           -netdev user,id=net0,hostfwd=tcp::3389-:3389 \
