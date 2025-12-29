@@ -1,0 +1,110 @@
+name: macOS QEMU HVF Windows 11 ISO
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vm:
+    runs-on: macos-13
+
+    timeout-minutes: 360
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # ==============================
+    # Install Homebrew
+    # ==============================
+    - name: Install Homebrew
+      shell: bash
+      run: |
+        if ! command -v brew >/dev/null 2>&1; then
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
+        echo "$(/opt/homebrew/bin/brew shellenv)" >> $GITHUB_ENV
+        echo "$(/usr/local/bin/brew shellenv)" >> $GITHUB_ENV
+
+    # ==============================
+    # Install QEMU (HVF)
+    # ==============================
+    - name: Install QEMU
+      shell: bash
+      run: |
+        brew update
+        brew install qemu
+
+    # ==============================
+    # Install NoMachine
+    # ==============================
+    - name: Install NoMachine
+      shell: bash
+      run: |
+        brew install --cask nomachine
+
+    # ==============================
+    # Install Tailscale
+    # ==============================
+    - name: Install Tailscale
+      shell: bash
+      run: |
+        brew install --cask tailscale
+
+    # ==============================
+    # Start Tailscale
+    # ==============================
+    - name: Start Tailscale
+      shell: bash
+      env:
+        TS_AUTHKEY: ${{ secrets.TS_AUTHKEY }}
+      run: |
+        sudo tailscale up \
+          --authkey=${TS_AUTHKEY} \
+          --hostname=gh-macos-qemu \
+          --accept-routes
+
+    # ==============================
+    # Prepare VM Files
+    # ==============================
+    - name: Prepare VM
+      shell: bash
+      run: |
+        mkdir -p $HOME/vm
+        qemu-img create -f qcow2 $HOME/vm/win11.qcow2 80G
+
+    # ==============================
+    # Download Windows 11 ISO
+    # ==============================
+    - name: Download Windows 11 ISO
+      shell: bash
+      run: |
+        curl -L \
+        -o $HOME/vm/Win11.iso \
+        https://archive.org/download/win-11-english-x-64_202111/Win11_English_x64.iso
+
+    # ==============================
+    # Run QEMU (Boot from ISO)
+    # ==============================
+    - name: Run Windows 11 Installer (HVF)
+      shell: bash
+      run: |
+        qemu-system-x86_64 \
+          -machine q35,accel=hvf \
+          -cpu host \
+          -smp 10 \
+          -m 24576 \
+          -drive file=$HOME/vm/win11.qcow2,format=qcow2 \
+          -cdrom $HOME/vm/Win11.iso \
+          -boot d \
+          -netdev user,id=net0,hostfwd=tcp::3389-:3389 \
+          -device virtio-net-pci,netdev=net0 \
+          -display none \
+          -daemonize
+
+    # ==============================
+    # Keep Alive
+    # ==============================
+    - name: Keep Runner Alive
+      shell: bash
+      run: |
+        while true; do sleep 60; done
