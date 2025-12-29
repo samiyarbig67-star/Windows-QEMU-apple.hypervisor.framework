@@ -54,18 +54,22 @@ jobs:
     # Start Tailscale
     # ==============================
     - name: Setup Tailscale (Safe Mode)
-      # این روش امن‌ترین راه برای جلوگیری از ارور سینتکس است
-      env:
-        TS_KEY: ${{ secrets.TAILSCALE_AUTHKEY }}
-      run: |
-        brew install tailscale
-        sleep 15
-        sudo tailscale up --authkey="$TS_KEY" --hostname="macos-win11-runner"
+    env:
+    TS_KEY: ${{ secrets.TAILSCALE_AUTHKEY }}
+    shell: bash
+    run: |
+     # بروزرسانی و safe install
+     brew update
+     brew install --cask --no-quarantine tailscale
 
-    - name: Get Connection Info
-      run: |
-        TS_IP=$(tailscale ip -4)
-        echo
+     # مطمئن شدن که binary قابل دسترسی است
+     sudo ln -sf /Applications/Tailscale.app/Contents/MacOS/Tailscale /usr/local/bin/tailscale
+
+     # صبر 5 ثانیه برای اطمینان
+     sleep 5
+
+     # اجرا با authkey
+     sudo tailscale up --authkey="$TS_KEY" --hostname="macos-win11-runner" || true
     # ==============================
     # Prepare VM Files
     # ==============================
