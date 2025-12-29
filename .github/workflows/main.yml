@@ -89,8 +89,8 @@ jobs:
         qemu-system-x86_64 \
           -machine q35,accel=hvf \
           -cpu host \
-          -smp 10 \
-          -m 24576 \
+          -smp 4 \
+          -m 6G \
           -drive file=$HOME/vm/win11.qcow2,format=qcow2 \
           -cdrom $HOME/vm/Win11.iso \
           -boot d \
