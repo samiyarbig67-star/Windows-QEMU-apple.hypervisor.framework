@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  vm:
+vm:
     runs-on: macos-14
 
     timeout-minutes: 360
@@ -68,8 +68,8 @@ jobs:
     - name: Prepare VM
       shell: bash
       run: |
-        mkdir -p $HOME/vm
-        qemu-img create -f qcow2 $HOME/vm/win11.qcow2 80G
+       mkdir -p $HOME/vm
+       qemu-img create -f qcow2 $HOME/vm/win11.qcow2 80G
 
     # ==============================
     # Download Windows 11 ISO
