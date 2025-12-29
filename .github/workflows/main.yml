@@ -1,24 +1,24 @@
 name: macOS QEMU HVF Windows 11 ISO
 
-on:
-workflow_dispatch:
+      on:
+      workflow_dispatch:
 
-jobs:
-vm:
-runs-on: macos-14
+      jobs:
+      vm:
+      runs-on: macos-14
 
 
 
-steps:
-- name: Checkout
-uses: actions/checkout@v4
+      steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
     # ==============================
     # Install Homebrew
     # ==============================
     - name: Install Homebrew
       shell: bash
-      run: |
+    run: |
         if ! command -v brew >/dev/null 2>&1; then
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         fi
