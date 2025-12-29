@@ -10,15 +10,15 @@ on:
 
 
       steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
     # ==============================
     # Install Homebrew
     # ==============================
-    - name: Install Homebrew
+      - name: Install Homebrew
       shell: bash
-    run: |
+      run: |
         if ! command -v brew >/dev/null 2>&1; then
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         fi
@@ -28,33 +28,33 @@ on:
     # ==============================
     # Install QEMU (HVF)
     # ==============================
-    - name: Install QEMU
+       - name: Install QEMU
       shell: bash
       run: |
-        brew update
-        brew install qemu
+       brew update
+       brew install qemu
 
     # ==============================
     # Install NoMachine
     # ==============================
-    - name: Install NoMachine
-      shell: bash
-      run: |
+       - name: Install NoMachine
+       shell: bash
+       run: |
         brew install --cask nomachine
 
     # ==============================
     # Install Tailscale
     # ==============================
-    - name: Install Tailscale
-      shell: bash
-      run: |
+     - name: Install Tailscale
+       shell: bash
+       run: |
         brew install --cask tailscale
 
     # ==============================
     # Start Tailscale
     # ==============================
-    - name: Start Tailscale
-    env:
+     - name: Start Tailscale
+     env:
      TS_KEY: ${{ secrets.TAILSCALE_AUTHKEY }}
      run: |
        brew install tailscale
@@ -65,7 +65,7 @@ on:
     # ==============================
     # Prepare VM Files
     # ==============================
-    - name: Prepare VM
+     - name: Prepare VM
       shell: bash
       run: |
        mkdir -p $HOME/vm
@@ -74,7 +74,7 @@ on:
     # ==============================
     # Download Windows 11 ISO
     # ==============================
-    - name: Download Windows 11 ISO
+     - name: Download Windows 11 ISO
       shell: bash
       run: |
         curl -L \
@@ -84,7 +84,7 @@ on:
     # ==============================
     # Run QEMU (Boot from ISO)
     # ==============================
-    - name: Run Windows 11 Installer (HVF)
+     - name: Run Windows 11 Installer (HVF)
       shell: bash
       run: |
         qemu-system-x86_64 \
@@ -103,7 +103,7 @@ on:
     # ==============================
     # Keep Alive
     # ==============================
-    - name: Keep Runner Alive
+     - name: Keep Runner Alive
       shell: bash
       run: |
         while true; do sleep 60; done
