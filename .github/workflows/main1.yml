@@ -1,0 +1,68 @@
+name: Native Windows + NoMachine + Tailscale
+
+on: workflow_dispatch
+
+jobs:
+  native-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: 1. Setup Tailscale (Secure)
+      # استفاده از اکشن رسمی برای ویندوز - بدون نیاز به sudo
+      uses: tailscale/github-action@v2
+      with:
+        authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+        hostname: "github-native-win"
+    
+    - name: 2. Configure RDP & Firewall
+      run: |
+        # فعال‌سازی RDP در رجیستری
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        
+        # باز کردن پورت‌ها در فایروال (RDP:3389, NoMachine:4000)
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        New-NetFirewallRule -DisplayName "NoMachine-NX" -Direction Inbound -LocalPort 4000 -Protocol TCP -Action Allow
+        
+        # تنظیم پسورد برای یوزر runneradmin
+        # نام کاربری پیش‌فرض: runneradmin
+        $pass = ConvertTo-SecureString "Mypassword123!" -AsPlainText -Force
+        Set-LocalUser -Name "runneradmin" -Password $pass
+        
+        Write-Host "---------------------------------------------"
+        Write-Host "RDP/NoMachine User: runneradmin"
+        Write-Host "Password: Mypassword123!"
+        Write-Host "---------------------------------------------"
+
+    - name: 3. Install NoMachine (NX Protocol)
+      # نصب NoMachine با استفاده از Chocolatey
+      run: |
+        Write-Host "Installing NoMachine..."
+        choco install nomachine -y --ignore-checksums
+        
+        # اطمینان از اجرای سرویس
+        Start-Sleep -Seconds 10
+        Get-Service -Name "nxserver" | Start-Service -PassThru
+
+    - name: 4. Get Tailscale IP
+      run: |
+        $ip = tailscale ip -4
+        Write-Host "==================================================="
+        Write-Host "CONNECT TO:"
+        Write-Host "IP: $ip"
+        Write-Host "User: runneradmin"
+        Write-Host "Pass: Mypassword123!"
+        Write-Host "---------------------------------------------------"
+        Write-Host "METHOD 1: Use NoMachine (Port 4000)"
+        Write-Host "METHOD 2: Use Remote Desktop (RDP)"
+        Write-Host "==================================================="
+
+    - name: 5. Keep Alive (6 Hours)
+      run: |
+        Write-Host "Server is Ready. Connect now."
+        $i = 0
+        while ($i -lt 21600) { 
+          Start-Sleep -Seconds 60
+          $i += 60
+          Write-Host "Alive for $i seconds..."
+        }
+        
